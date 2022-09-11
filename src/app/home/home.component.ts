@@ -5,6 +5,7 @@ import {catchError, delay, delayWhen, filter, finalize, map, retryWhen, shareRep
 import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {CourseDialogComponent} from '../course-dialog/course-dialog.component';
 import { ApiService } from '../services/api.service';
+import { LoaderService } from '../services/loader.service';
 
 
 @Component({
@@ -19,7 +20,9 @@ export class HomeComponent implements OnInit {
   advancedCourses$: Observable<Course[]>;
 
 
-  constructor(private apiService: ApiService, private dialog: MatDialog) {
+  constructor(private apiService: ApiService, 
+    private dialog: MatDialog,
+    private readonly loaderService: LoaderService) {
 
   }
 
@@ -27,11 +30,13 @@ export class HomeComponent implements OnInit {
 
     const couses$ = this.apiService.loadCourses$();
 
-    this.beginnerCourses$ = couses$.pipe(
+    const loadingCourses$ = this.loaderService.showLoaderUntilCompleted(couses$);
+
+    this.beginnerCourses$ = loadingCourses$.pipe(
       map(courses => courses.filter(course => course.category === "BEGINNER"))
     );
 
-    this.advancedCourses$ = couses$.pipe(
+    this.advancedCourses$ = loadingCourses$.pipe(
       map(courses => courses.filter(course => course.category === "ADVANCED"))
     );
 
